@@ -38,8 +38,8 @@ resource "aws_msk_cluster" "msk_cluster" {
     security_groups = [data.terraform_remote_state.base.outputs.sg_id]
     connectivity_info {
       public_access {
-         type = "DISABLED"
-        # type = "SERVICE_PROVIDED_EIPS"
+#         type = "DISABLED"
+         type = "SERVICE_PROVIDED_EIPS"
       }
     }
   }
@@ -72,7 +72,7 @@ locals {
 }
 
 resource "aws_secretsmanager_secret" "msk_auth_secret" {
-  name       = "AmazonMSK_message-streaming-1"
+  name       = "AmazonMSK_message-streaming-2"
   kms_key_id = data.terraform_remote_state.base.outputs.kms_id
 }
 
@@ -133,33 +133,13 @@ resource "aws_iam_role" "msk_instance_role" {
         {
           "Effect" : "Allow",
           "Action" : [
-            "kafka-cluster:Connect",
-            "kafka-cluster:AlterCluster",
-            "kafka-cluster:DescribeCluster"
+            "kafka-cluster:*",
           ],
           "Resource" : [
-            "arn:aws:kafka:${var.region}:${local.account_id}:cluster/${aws_msk_cluster.msk_cluster.cluster_name}/*"
-          ]
-        },
-        {
-          "Effect" : "Allow",
-          "Action" : [
-            "kafka-cluster:*_topic",
-            "kafka-cluster:WriteData",
-            "kafka-cluster:ReadData"
-          ],
-          "Resource" : [
-            "arn:aws:kafka:${var.region}:${local.account_id}:topic/${aws_msk_cluster.msk_cluster.cluster_name}/*"
-          ]
-        },
-        {
-          "Effect" : "Allow",
-          "Action" : [
-            "kafka-cluster:AlterGroup",
-            "kafka-cluster:DescribeGroup"
-          ],
-          "Resource" : [
-            "arn:aws:kafka:${var.region}:${local.account_id}:group/${aws_msk_cluster.msk_cluster.cluster_name}/*"
+            "arn:aws:kafka:${var.region}:${local.account_id}:cluster/${aws_msk_cluster.msk_cluster.cluster_name}/*",
+            "arn:aws:kafka:${var.region}:${local.account_id}:topic/${aws_msk_cluster.msk_cluster.cluster_name}/*",
+            "arn:aws:kafka:${var.region}:${local.account_id}:group/${aws_msk_cluster.msk_cluster.cluster_name}/*",
+            "arn:aws:kafka:${var.region}:${local.account_id}:transactional-id/${aws_msk_cluster.msk_cluster.cluster_name}/*",
           ]
         }
       ]
@@ -234,6 +214,8 @@ resource "aws_instance" "msk_bastion_host" {
   echo "sasl.client.callback.handler.class=software.amazon.msk.auth.iam.IAMClientCallbackHandler" >> client.properties
 
   ./kafka-acls.sh --bootstrap-server ${aws_msk_cluster.msk_cluster.bootstrap_brokers_sasl_iam} --command-config client.properties --add --allow-principal User:${var.msk_user} --operation All --cluster '*'
+  ./kafka-acls.sh --bootstrap-server ${aws_msk_cluster.msk_cluster.bootstrap_brokers_sasl_iam} --command-config client.properties --add --allow-principal User:${var.msk_user} --operation All --topic '*'
+  ./kafka-acls.sh --bootstrap-server ${aws_msk_cluster.msk_cluster.bootstrap_brokers_sasl_iam} --command-config client.properties --add --allow-principal User:${var.msk_user} --operation All --group '*'
   EOL
 
   tags = {

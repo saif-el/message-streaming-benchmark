@@ -4,7 +4,6 @@ resource "aws_sns_topic" "main_topic" {
 
 resource "aws_sqs_queue" "cg1_queue" {
   name                       = "message-streaming-benchmark-cg1-queue"
-  kms_master_key_id          = data.terraform_remote_state.base.outputs.kms_id
   visibility_timeout_seconds = 300
 }
 
@@ -41,7 +40,6 @@ resource "aws_sns_topic_subscription" "cg1_subscription" {
 
 resource "aws_sqs_queue" "cg2_queue" {
   name                       = "message-streaming-benchmark-cg2-queue"
-  kms_master_key_id          = data.terraform_remote_state.base.outputs.kms_id
   visibility_timeout_seconds = 300
 }
 
@@ -74,4 +72,48 @@ resource "aws_sns_topic_subscription" "cg2_subscription" {
   topic_arn = aws_sns_topic.main_topic.arn
   protocol  = "sqs"
   endpoint  = aws_sqs_queue.cg2_queue.arn
+}
+
+resource "aws_iam_role" "sns_sqs_rw_access_role" {
+  name = "message-streaming-benchmark-sns-sqs-role"
+
+  assume_role_policy = jsonencode({
+    Version   = "2012-10-17"
+    Statement = [
+      {
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
+        Sid       = ""
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      },
+    ]
+  })
+
+  inline_policy {
+    name   = "message-streaming-benchmark-sns-sqs-policy"
+    policy = jsonencode(
+      {
+        "Version" : "2012-10-17",
+        "Statement" : [
+          {
+            "Sid" : "SNSAllActions",
+            "Effect" : "Allow",
+            "Action" : "sns:*",
+            "Resource" : aws_sns_topic.main_topic.arn
+          },
+          {
+            "Sid" : "SQSAllActions",
+            "Effect" : "Allow",
+            "Action" : "sqs:*",
+            "Resource" : [
+              aws_sqs_queue.cg1_queue.arn,
+              aws_sqs_queue.cg2_queue.arn
+            ]
+          }
+        ]
+      }
+    )
+  }
 }

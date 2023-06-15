@@ -18,48 +18,10 @@
 #  vhost = rabbitmq_permissions.tf_permissions.vhost
 #
 #  settings {
-#    type        = "fanout"
+#    type        = "direct"
 #    durable     = false
 #    auto_delete = true
 #  }
-#}
-#
-#resource "rabbitmq_exchange" "cg1" {
-#  name  = "cg1_exchange"
-#  vhost = rabbitmq_permissions.tf_permissions.vhost
-#
-#  settings {
-#    type        = "default"
-#    durable     = false
-#    auto_delete = true
-#  }
-#}
-#
-#resource "rabbitmq_binding" "main_to_cg1" {
-#  vhost            = rabbitmq_vhost.aws_mq.name
-#  source           = rabbitmq_exchange.main.name
-#  destination      = rabbitmq_exchange.cg1.name
-#  destination_type = "exchange"
-#  routing_key      = "#"
-#}
-#
-#resource "rabbitmq_exchange" "cg2" {
-#  name  = "cg2_exchange"
-#  vhost = rabbitmq_permissions.tf_permissions.vhost
-#
-#  settings {
-#    type        = "default"
-#    durable     = false
-#    auto_delete = true
-#  }
-#}
-#
-#resource "rabbitmq_binding" "main_to_cg2" {
-#  vhost            = rabbitmq_vhost.aws_mq.name
-#  source           = rabbitmq_exchange.main.name
-#  destination      = rabbitmq_exchange.cg2.name
-#  destination_type = "exchange"
-#  routing_key      = "#"
 #}
 #
 #resource "rabbitmq_queue" "cg1_queues" {
@@ -73,13 +35,13 @@
 #  }
 #}
 #
-#resource "rabbitmq_binding" "cg1_to_queues" {
+#resource "rabbitmq_binding" "main_to_cg1_queues" {
 #  for_each         = { for q in rabbitmq_queue.cg1_queues : q.name => q }
 #  vhost            = rabbitmq_vhost.aws_mq.name
-#  source           = rabbitmq_exchange.cg1.name
+#  source           = rabbitmq_exchange.main.name
 #  destination      = each.key
 #  destination_type = "queue"
-#  routing_key      = "#"
+#  routing_key      = each.key
 #}
 #
 #resource "rabbitmq_queue" "cg2_queues" {
@@ -93,11 +55,11 @@
 #  }
 #}
 #
-#resource "rabbitmq_binding" "cg2_to_queues" {
+#resource "rabbitmq_binding" "main_to_cg2_queues" {
 #  for_each         = { for q in rabbitmq_queue.cg2_queues : q.name => q }
 #  vhost            = rabbitmq_vhost.aws_mq.name
-#  source           = rabbitmq_exchange.cg2.name
+#  source           = rabbitmq_exchange.main.name
 #  destination      = each.key
 #  destination_type = "queue"
-#  routing_key      = "#"
+#  routing_key      = each.key
 #}

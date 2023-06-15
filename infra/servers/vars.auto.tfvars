@@ -1,5 +1,5 @@
 # Amazon MQ
-mq_broker_id = "b-e828168c-3a30-45e7-84d1-3272a9548ebb"
+mq_broker_id = "b-0a02b5d1-140c-4ffe-9dfa-fae45f425803"
 
 # Amazon MSK
 msk_broker_instance_type = "kafka.m5.large"

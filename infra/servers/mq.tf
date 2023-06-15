@@ -8,7 +8,7 @@ locals {
 }
 
 resource "aws_secretsmanager_secret" "mq_auth_secret" {
-  name = "AmazonMQ_message-streaming-1"
+  name = "AmazonMQ_message-streaming-2"
 }
 
 resource "aws_secretsmanager_secret_version" "mq_auth_secret_version" {
